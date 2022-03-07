@@ -111,10 +111,10 @@ class Generator(torch.nn.Module):
             x = xs / self.num_kernels
         x = F.leaky_relu(x)
         x = self.conv_post(x)
-        x[:, :9, :] = torch.exp(x[:,:9, :])
-        x[:, 9:, :] = torch.sin(x[:, 9:, :])
+        spec = torch.exp(x[:,:9, :])
+        phase = torch.sin(x[:, 9:, :])
 
-        return x #spec, phase
+        return spec, phase
 
     def remove_weight_norm(self):
         print('Removing weight norm...')

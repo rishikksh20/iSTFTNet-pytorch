@@ -17,6 +17,7 @@ from meldataset import MelDataset, mel_spectrogram, get_dataset_filelist
 from models import Generator, MultiPeriodDiscriminator, MultiScaleDiscriminator, feature_loss, generator_loss,\
     discriminator_loss
 from utils import plot_spectrogram, scan_checkpoint, load_checkpoint, save_checkpoint
+from stft import STFT
 
 torch.backends.cudnn.benchmark = True
 
@@ -32,6 +33,7 @@ def train(rank, a, h):
     generator = Generator(h).to(device)
     mpd = MultiPeriodDiscriminator().to(device)
     msd = MultiScaleDiscriminator().to(device)
+    stft = STFT(filter_length=16, hop_length=4, win_length=16).to(device)
 
     if rank == 0:
         print(generator)
@@ -118,14 +120,11 @@ def train(rank, a, h):
             y = torch.autograd.Variable(y.to(device, non_blocking=True))
             y_mel = torch.autograd.Variable(y_mel.to(device, non_blocking=True))
             y = y.unsqueeze(1)
-            y_g_hat = generator(x)
-            # spec, phase= generator(x)
-            # recombine_magnitude_phase = torch.cat(
-            #     [spec * torch.cos(phase), spec * torch.sin(phase)], dim=1
-            # )
+            # y_g_hat = generator(x)
+            spec, phase= generator(x)
 
-            y_g_hat = torch.istft(y_g_hat, 16, hop_length=4, win_length=16, window=torch.hann_window(16).to(device),
-                      center=False, pad_mode='reflect', normalized=False, onesided=True)
+
+            y_g_hat = stft.inverse(spec, phase)
 
             y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size,
                                           h.fmin, h.fmax_for_loss)
@@ -198,15 +197,10 @@ def train(rank, a, h):
                     with torch.no_grad():
                         for j, batch in enumerate(validation_loader):
                             x, y, _, y_mel = batch
-                            y_g_hat = generator(x.to(device))
-                            # spec, phase = generator(x.to(device))
-                            # recombine_magnitude_phase = torch.cat(
-                            #     [spec * torch.cos(phase), spec * torch.sin(phase)], dim=1
-                            # )
+                            # y_g_hat = generator(x.to(device))
+                            spec, phase = generator(x)
 
-                            y_g_hat = torch.istft(y_g_hat, 16, hop_length=4, win_length=16,
-                                                  window=torch.hann_window(16).to(device),
-                                                  center=False, pad_mode='reflect', normalized=False, onesided=True)
+                            y_g_hat = stft.inverse(spec, phase)
 
                             y_mel = torch.autograd.Variable(y_mel.to(device, non_blocking=True))
                             y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate,
