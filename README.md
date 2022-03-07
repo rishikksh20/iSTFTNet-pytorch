@@ -1,4 +1,4 @@
-# iSTFTNet : FAST AND LIGHTWEIGHT MEL-SPECTROGRAM VOCODER INCORPORATING INVERSE SHORT-TIME FOURIER TRANSFORM
+# iSTFTNet : Fast and Lightweight Mel-spectrogram Vocoder Incorporating Inverse Short-time Fourier Transform
 [Paper](https://arxiv.org/pdf/2203.02395.pdf)
 
 ```
