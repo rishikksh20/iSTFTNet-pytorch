@@ -73,7 +73,7 @@ def window_sumsquare(window, n_frames, hop_length=200, win_length=800,
     for i in range(n_frames):
         sample = i * hop_length
         x[sample:min(n, sample + n_fft)] += win_sq[:max(0, min(n_fft, n - sample))]
-    return
+    return x
 
 
 class STFT(torch.nn.Module):
