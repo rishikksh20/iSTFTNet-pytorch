@@ -121,8 +121,7 @@ def train(rank, a, h):
             y_mel = torch.autograd.Variable(y_mel.to(device, non_blocking=True))
             y = y.unsqueeze(1)
             # y_g_hat = generator(x)
-            spec, phase= generator(x)
-
+            spec, phase = generator(x)
 
             y_g_hat = stft.inverse(spec, phase)
 
@@ -198,7 +197,7 @@ def train(rank, a, h):
                         for j, batch in enumerate(validation_loader):
                             x, y, _, y_mel = batch
                             # y_g_hat = generator(x.to(device))
-                            spec, phase = generator(x)
+                            spec, phase = generator(x.to(device))
 
                             y_g_hat = stft.inverse(spec, phase)
 

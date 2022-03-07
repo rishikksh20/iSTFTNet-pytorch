@@ -96,6 +96,7 @@ class Generator(torch.nn.Module):
         self.conv_post = weight_norm(Conv1d(ch, 18, 7, 1, padding=3))
         self.ups.apply(init_weights)
         self.conv_post.apply(init_weights)
+        self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
 
     def forward(self, x):
         x = self.conv_pre(x)
@@ -110,6 +111,7 @@ class Generator(torch.nn.Module):
                     xs += self.resblocks[i*self.num_kernels+j](x)
             x = xs / self.num_kernels
         x = F.leaky_relu(x)
+        x = self.reflection_pad(x)
         x = self.conv_post(x)
         spec = torch.exp(x[:,:9, :])
         phase = torch.sin(x[:, 9:, :])
