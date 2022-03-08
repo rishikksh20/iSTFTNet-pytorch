@@ -10,6 +10,7 @@ from scipy.io.wavfile import write
 from env import AttrDict
 from meldataset import MAX_WAV_VALUE
 from models import Generator
+from stft import STFT
 
 h = None
 device = None
@@ -33,7 +34,7 @@ def scan_checkpoint(cp_dir, prefix):
 
 def inference(a):
     generator = Generator(h).to(device)
-
+    stft = STFT(filter_length=16, hop_length=4, win_length=16).to(device)
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
 
@@ -47,7 +48,8 @@ def inference(a):
         for i, filname in enumerate(filelist):
             x = np.load(os.path.join(a.input_mels_dir, filname))
             x = torch.FloatTensor(x).to(device)
-            y_g_hat = generator(x)
+            spec, phase = generator(x)
+            y_g_hat = stft.inverse(spec, phase)
             audio = y_g_hat.squeeze()
             audio = audio * MAX_WAV_VALUE
             audio = audio.cpu().numpy().astype('int16')
