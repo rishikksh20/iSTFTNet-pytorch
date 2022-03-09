@@ -6,7 +6,7 @@
 python train.py --config config_v1.json
 ```
 
-
+## Citations :
 ```
 @inproceedings{kaneko2022istftnet,
 title={{iSTFTNet}: Fast and Lightweight Mel-Spectrogram Vocoder Incorporating Inverse Short-Time Fourier Transform},
