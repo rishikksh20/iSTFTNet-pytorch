@@ -1,5 +1,5 @@
 # iSTFTNet : Fast and Lightweight Mel-spectrogram Vocoder Incorporating Inverse Short-time Fourier Transform
-[Paper](https://arxiv.org/pdf/2203.02395.pdf)
+This repo try to implement [iSTFTNet : Fast and Lightweight Mel-spectrogram Vocoder Incorporating Inverse Short-time Fourier Transform](https://arxiv.org/pdf/2203.02395.pdf) specifically model `C8C8I`.
 
 ## Training :
 ```
