@@ -16,3 +16,6 @@ booktitle={ICASSP},
 year={2022},
 }
 ```
+
+## References:
+* https://github.com/jik876/hifi-gan
