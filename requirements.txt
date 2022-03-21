@@ -1,4 +1,4 @@
-torch==1.4.0
+torch
 numpy==1.17.4
 librosa==0.7.2
 scipy==1.4.1
