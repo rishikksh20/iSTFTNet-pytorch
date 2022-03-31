@@ -7,6 +7,10 @@ This repo try to implement [iSTFTNet : Fast and Lightweight Mel-spectrogram Voco
 python train.py --config config_v1.json
 ```
 
+## Note:
+* We are able to get good quality of audio with 30 % less training compared to original hifigan.
+* This model approx 60 % faster than counterpart hifigan.
+
 ## Citations :
 ```
 @inproceedings{kaneko2022istftnet,
