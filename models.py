@@ -93,7 +93,8 @@ class Generator(torch.nn.Module):
             for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
                 self.resblocks.append(resblock(h, ch, k, d))
 
-        self.conv_post = weight_norm(Conv1d(ch, 18, 7, 1, padding=3))
+        self.post_n_fft = h.gen_istft_n_fft
+        self.conv_post = weight_norm(Conv1d(ch, self.post_n_fft + 2, 7, 1, padding=3))
         self.ups.apply(init_weights)
         self.conv_post.apply(init_weights)
         self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
@@ -113,8 +114,8 @@ class Generator(torch.nn.Module):
         x = F.leaky_relu(x)
         x = self.reflection_pad(x)
         x = self.conv_post(x)
-        spec = torch.exp(x[:,:9, :])
-        phase = torch.sin(x[:, 9:, :])
+        spec = torch.exp(x[:,:self.post_n_fft // 2 + 1, :])
+        phase = torch.sin(x[:, self.post_n_fft // 2 + 1:, :])
 
         return spec, phase
 

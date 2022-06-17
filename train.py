@@ -33,7 +33,7 @@ def train(rank, a, h):
     generator = Generator(h).to(device)
     mpd = MultiPeriodDiscriminator().to(device)
     msd = MultiScaleDiscriminator().to(device)
-    stft = STFT(filter_length=16, hop_length=4, win_length=16).to(device)
+    stft = STFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
 
     if rank == 0:
         print(generator)
