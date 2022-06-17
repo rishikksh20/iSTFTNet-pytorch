@@ -17,7 +17,7 @@ from meldataset import MelDataset, mel_spectrogram, get_dataset_filelist
 from models import Generator, MultiPeriodDiscriminator, MultiScaleDiscriminator, feature_loss, generator_loss,\
     discriminator_loss
 from utils import plot_spectrogram, scan_checkpoint, load_checkpoint, save_checkpoint
-from stft import STFT
+from stft import TorchSTFT
 
 torch.backends.cudnn.benchmark = True
 
@@ -33,7 +33,7 @@ def train(rank, a, h):
     generator = Generator(h).to(device)
     mpd = MultiPeriodDiscriminator().to(device)
     msd = MultiScaleDiscriminator().to(device)
-    stft = STFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
+    stft = TorchSTFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
 
     if rank == 0:
         print(generator)
