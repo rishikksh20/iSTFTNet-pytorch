@@ -9,7 +9,7 @@ from scipy.io.wavfile import write
 from env import AttrDict
 from meldataset import mel_spectrogram, MAX_WAV_VALUE, load_wav
 from models import Generator
-from stft import STFT
+from stft import TorchSTFT
 
 
 h = None
@@ -38,7 +38,7 @@ def scan_checkpoint(cp_dir, prefix):
 
 def inference(a):
     generator = Generator(h).to(device)
-    stft = STFT(filter_length=16, hop_length=4, win_length=16).to(device)
+    stft = TorchSTFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
 
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
