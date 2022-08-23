@@ -82,9 +82,10 @@ class Generator(torch.nn.Module):
                  dropout=0.1,
                  upsample_scales=(8, 8),
                  resblock_kernel_sizes=(3, 7, 11),
-                 resblock_dilations=((1, 3, 5), (1, 3, 5), (1, 3, 5), (1, 3, 5)),
+                 resblock_dilations=((1, 3, 5), (1, 3, 5)),
                  use_additional_convs=True,
                  use_weight_norm=True,
+                 training=True
                  ):
         super(Generator, self).__init__()
 
@@ -124,6 +125,8 @@ class Generator(torch.nn.Module):
             nn.Conv1d(channels // (2 ** (i + 1)), out_channels + 2, 7, 1, padding=3),
             nn.Tanh()
         )
+        self.post_n_fft = out_channels
+        self.training = training
 
         if use_weight_norm:
             self.apply_weight_norm()

@@ -175,7 +175,7 @@ def train(rank, a, h):
                     save_checkpoint(checkpoint_path,
                                     {'generator': (generator.module if h.num_gpus > 1 else generator).state_dict()})
                     checkpoint_path = "{}/do_{:08d}".format(a.checkpoint_path, steps)
-                    save_checkpoint(checkpoint_path, 
+                    save_checkpoint(checkpoint_path,
                                     {'mpd': (mpd.module if h.num_gpus > 1
                                                          else mpd).state_dict(),
                                      'msd': (msd.module if h.num_gpus > 1
@@ -191,6 +191,8 @@ def train(rank, a, h):
                 # Validation
                 if steps % a.validation_interval == 0:  # and steps != 0:
                     generator.eval()
+                    generator.training = False
+                    generator.convert_weight_bias()
                     torch.cuda.empty_cache()
                     val_err_tot = 0
                     with torch.no_grad():
@@ -222,13 +224,14 @@ def train(rank, a, h):
                         val_err = val_err_tot / (j+1)
                         sw.add_scalar("validation/mel_spec_error", val_err, steps)
 
+                    generator.training = True
                     generator.train()
 
             steps += 1
 
         scheduler_g.step()
         scheduler_d.step()
-        
+
         if rank == 0:
             print('Time taken for epoch {} is {} sec\n'.format(epoch + 1, int(time.time() - start)))
 
@@ -247,7 +250,7 @@ def main():
     parser.add_argument('--config', default='')
     parser.add_argument('--training_epochs', default=3100, type=int)
     parser.add_argument('--stdout_interval', default=5, type=int)
-    parser.add_argument('--checkpoint_interval', default=5000, type=int)
+    parser.add_argument('--checkpoint_interval', default=10000, type=int)
     parser.add_argument('--summary_interval', default=100, type=int)
     parser.add_argument('--validation_interval', default=1000, type=int)
     parser.add_argument('--fine_tuning', default=False, type=bool)
