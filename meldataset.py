@@ -107,6 +107,10 @@ class MelDataset(torch.utils.data.Dataset):
         self.device = device
         self.fine_tuning = fine_tuning
         self.base_mels_path = base_mels_path
+        self.downsample_resample = torchaudio.transforms.Resample(
+    sampling_rate, sampling_rate//2, resampling_method='sinc_interpolation')
+
+
 
     def __getitem__(self, index):
         filename = self.audio_files[index]
@@ -127,6 +131,7 @@ class MelDataset(torch.utils.data.Dataset):
         audio = torch.FloatTensor(audio)
         audio = audio.unsqueeze(0)
 
+
         if not self.fine_tuning:
             if self.split:
                 if audio.size(1) >= self.segment_size:
@@ -136,8 +141,9 @@ class MelDataset(torch.utils.data.Dataset):
                 else:
                     audio = torch.nn.functional.pad(audio, (0, self.segment_size - audio.size(1)), 'constant')
 
-            mel = mel_spectrogram(audio, self.n_fft, self.num_mels,
-                                  self.sampling_rate, self.hop_size, self.win_size, self.fmin, self.fmax,
+            down_sampled = self.downsample_resample(audio)
+            mel = mel_spectrogram(down_sampled, self.n_fft//2, self.num_mels,
+                                  self.sampling_rate//2, self.hop_size//2, self.win_size//2, self.fmin, self.fmax,
                                   center=False)
         else:
             mel = np.load(
