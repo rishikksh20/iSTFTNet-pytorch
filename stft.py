@@ -184,7 +184,7 @@ class TorchSTFT(torch.nn.Module):
         self.filter_length = filter_length
         self.hop_length = hop_length
         self.win_length = win_length
-        self.window = torch.from_numpy(get_window(window, win_length, fftbins=True).astype(np.float32))
+        self.window = torch.from_numpy(get_window(window, win_length, fftbins=True).astype(np.float32)).cuda()
 
     def transform(self, input_data):
         forward_transform = torch.stft(
