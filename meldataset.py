@@ -74,11 +74,11 @@ def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin,
 
 def get_dataset_filelist(a):
     with open(a.input_training_file, 'r', encoding='utf-8') as fi:
-        training_files = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
+        training_files = [(os.path.join(a.input_wavs_dir, x.split('|')[0]), (os.path.join(a.input_ds_dir, x.split('|')[0])))
                           for x in fi.read().split('\n') if len(x) > 0]
 
     with open(a.input_validation_file, 'r', encoding='utf-8') as fi:
-        validation_files = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
+        validation_files = [(os.path.join(a.input_wavs_dir, x.split('|')[0]), (os.path.join(a.input_ds_dir, x.split('|')[0])))
                             for x in fi.read().split('\n') if len(x) > 0]
     return training_files, validation_files
 
@@ -107,41 +107,49 @@ class MelDataset(torch.utils.data.Dataset):
         self.device = device
         self.fine_tuning = fine_tuning
         self.base_mels_path = base_mels_path
-        self.downsample_resample = torchaudio.transforms.Resample(
-    sampling_rate, sampling_rate//2, resampling_method='sinc_interpolation')
+    #     self.downsample_resample = torchaudio.transforms.Resample(
+    # sampling_rate, sampling_rate//2, resampling_method='sinc_interpolation')
 
 
 
     def __getitem__(self, index):
-        filename = self.audio_files[index]
+        filename, ds_fname = self.audio_files[index]
         if self._cache_ref_count == 0:
             audio, sampling_rate = load_wav(filename)
+            ds_audio, _ = load_wav(ds_fname)
             audio = audio / MAX_WAV_VALUE
+            ds_audio = ds_audio / MAX_WAV_VALUE
             if not self.fine_tuning:
                 audio = normalize(audio) * 0.95
             self.cached_wav = audio
+            self.cached_ds = ds_audio
             if sampling_rate != self.sampling_rate:
                 raise ValueError("{} SR doesn't match target {} SR".format(
                     sampling_rate, self.sampling_rate))
             self._cache_ref_count = self.n_cache_reuse
         else:
             audio = self.cached_wav
+            ds_audio = self.cached_ds
             self._cache_ref_count -= 1
 
         audio = torch.FloatTensor(audio)
         audio = audio.unsqueeze(0)
+        down_sampled = torch.FloatTensor(ds_audio)
+        down_sampled = down_sampled.unsqueeze(0)
 
 
-        if not self.fine_tuning:
+        if self.fine_tuning:
             if self.split:
                 if audio.size(1) >= self.segment_size:
                     max_audio_start = audio.size(1) - self.segment_size
                     audio_start = random.randint(0, max_audio_start)
                     audio = audio[:, audio_start:audio_start+self.segment_size]
+                    down_sampled = down_sampled[:, audio_start//2:audio_start//2+self.segment_size//2]
                 else:
                     audio = torch.nn.functional.pad(audio, (0, self.segment_size - audio.size(1)), 'constant')
+                    down_sampled = torch.nn.functional.pad(down_sampled, (0, self.segment_size//2 - audio.size(1)//2), 'constant')
 
-            down_sampled = self.downsample_resample(audio)
+            # down_sampled = self.downsample_resample(audio)
             mel = mel_spectrogram(down_sampled, self.n_fft//2, self.num_mels,
                                   self.sampling_rate//2, self.hop_size//2, self.win_size//2, self.fmin, self.fmax,
                                   center=False)
